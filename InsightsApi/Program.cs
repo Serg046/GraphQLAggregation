@@ -1,10 +1,20 @@
-﻿using GraphQL;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
+using GraphQL;
 using GraphQL.Types;
 using GraphQLParser.AST;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+using System.Data;
 using System.Linq.Expressions;
 
+var dbConnection = new SqliteConnection("DataSource=:memory:");
+await dbConnection.OpenAsync();
+await PrepareDatabase(dbConnection);
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSingleton<IDbConnection>(dbConnection);
 var schema = new Schema { Query = new Query() };
 schema.Directives.Register(new AggregationDirective(), new SumDirective());
 builder.Services.AddGraphQL(b => b
@@ -21,8 +31,57 @@ app.UseGraphQLPlayground(
     });
 await app.RunAsync();
 
-public record Passport(int Id, string Number);
-public record User(string FirstName, string LastName, int Age, Passport Passport);
+static async Task PrepareDatabase(IDbConnection dbConnection)
+{
+    var cmd = dbConnection.CreateCommand();
+    cmd.CommandText = """
+        create table Users(Id int, FirstName nvarchar(100), LastName nvarchar(100), Age int, PassportId int);
+        create table Passports(Id int, Number nvarchar(100));
+        """;
+    cmd.ExecuteNonQuery();
+    await dbConnection.InsertAsync(new Passport[]
+    {
+        new Passport { Id = 1, Number = "abc" },
+        new Passport { Id = 2, Number = "bcd" },
+        new Passport { Id = 3, Number = "cde" },
+        new Passport { Id = 4, Number = "def" },
+        new Passport { Id = 5, Number = "efg" }
+    });
+
+    await dbConnection.InsertAsync(new User[]
+    {
+        new User { Id = 1, FirstName = "John", LastName = "Doe", Age = 35, PassportId = 1 },
+        new User { Id = 2, FirstName = "", LastName = "Smith", Age = 37, PassportId = 2 },
+        new User { Id = 3, FirstName = "Paul", LastName = "Jones", Age = 39, PassportId = 3 },
+        new User { Id = 4, FirstName = "John", LastName = "Smith", Age = 41, PassportId = 4 },
+        new User { Id = 5, FirstName = "Paul", LastName = "Williams", Age = 43, PassportId = 5 }
+    });
+}
+
+public class Passport
+{
+    [ExplicitKey]
+    public required int Id { get; init; }
+
+    public required string Number { get; init; }
+}
+
+public class User
+{
+    [ExplicitKey]
+    public required int Id { get; init; }
+
+    public required string FirstName { get; init; }
+
+    public required string LastName { get; init; }
+
+    public required int Age { get; init; }
+
+    public required int PassportId { get; init; }
+
+    [Computed]
+    public Passport? Passport { get; set; }
+}
 
 public class PassportType : ObjectGraphType<Passport>
 {
@@ -48,18 +107,20 @@ public class Query : ObjectGraphType
 {
     public Query()
     {
-        var dataStorage = new User[]
-        {
-            new("John", "Doe", 35, new(1, "abc")),
-            new("Paul", "Smith", 37, new(2, "bcd")),
-            new("Paul", "Jones", 39, new(3, "cde")),
-            new("John", "Smith", 41, new(4, "def")),
-            new("Paul", "Williams", 43, new(5, "efg"))
-        };
-
         Field<ListGraphType<UserType>>("users")
-            .Resolve(context =>
+            .ResolveAsync(async context =>
             {
+                var dbConnection = context.RequestServices!.GetRequiredService<IDbConnection>();
+                var users = await dbConnection.GetAllAsync<User>();
+                var passports = await dbConnection.GetAllAsync<Passport>();
+                var dataStorage = await dbConnection.QueryAsync<User, Passport, User>(
+                    "select * from Users u inner join Passports p on u.PassportId = p.Id",
+                    (u, p) =>
+                    {
+                        u.Passport = p;
+                        return u;
+                    });
+
                 if (context.Directives?.TryGetValue(AggregationDirective.NAME, out var directive) == true)
                 {
                     if (directive.Arguments.Values.FirstOrDefault().Value is object[] groupBy)
@@ -81,7 +142,11 @@ public class Query : ObjectGraphType
                 return dataStorage;
             });
         Field<ListGraphType<PassportType>>("passports")
-            .Resolve(context => dataStorage.Select(u => u.Passport));
+            .ResolveAsync(async context =>
+            {
+                var dbConnection = context.RequestServices!.GetRequiredService<IDbConnection>();
+                return await dbConnection.GetAllAsync<Passport>();
+            });
     }
 
     private IGraphType? FindResolvedType(IGraphType? type)
@@ -115,7 +180,7 @@ public class SumDirective : Directive
 {
     public const string NAME = "sum";
 
-    public SumDirective(): base(NAME, DirectiveLocation.Field)
+    public SumDirective() : base(NAME, DirectiveLocation.Field)
     {
     }
 }
