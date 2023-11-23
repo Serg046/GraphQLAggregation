@@ -1,7 +1,7 @@
-﻿using Dapper.Contrib.Extensions;
+﻿using Api;
+using Dapper.Contrib.Extensions;
 using GraphQL;
 using GraphQL.Types;
-using InsightsApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IDbConnection>(dbConnection);
 builder.Services.AddGraphQL(b => b
     .AddSystemTextJson()
-    .AddSchema<InsightsSchema>()
-    .AddGraphTypes(typeof(InsightsSchema).Assembly)
+    .AddSchema<ApiSchema>()
+    .AddGraphTypes(typeof(ApiSchema).Assembly)
     .AddDataLoader());
 
 var app = builder.Build();
@@ -57,9 +57,9 @@ static async Task PrepareDatabase(IDbConnection dbConnection)
     });
 }
 
-public class InsightsSchema : Schema
+public class ApiSchema : Schema
 {
-    public InsightsSchema(IServiceProvider services, Query query) : base(services)
+    public ApiSchema(IServiceProvider services, Query query) : base(services)
     {
         Query = query;
         Directives.Register(new AggregationDirective(), new MaxDirective());

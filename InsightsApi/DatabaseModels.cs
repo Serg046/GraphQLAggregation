@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace InsightsApi;
+namespace Api;
 
 public class Passport
 {

@@ -3,7 +3,7 @@ using GraphQL.DataLoader;
 using GraphQL.Types;
 using System.Data;
 
-namespace InsightsApi;
+namespace Api;
 
 public class PassportType : ObjectGraphType<Passport>
 {

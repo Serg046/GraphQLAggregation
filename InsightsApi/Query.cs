@@ -7,7 +7,7 @@ using Dapper;
 using GraphQLParser;
 using Dapper.Contrib.Extensions;
 
-namespace InsightsApi;
+namespace Api;
 
 public class Query : ObjectGraphType
 {
