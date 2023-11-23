@@ -3,8 +3,9 @@
   users
   {
     firstName
-    age
     lastName
+    age
+    kids
     passport {id number}
   }
 }
@@ -15,9 +16,10 @@
   users @aggregation(by: "firstName")
   {
     firstName
-    age @max
     lastName @max
-    passport @max(by: "passportId") {id number}
+    age @avg
+    kids @sum
+    passport @min(by: "passportId") {id number}
   }
 }
 ```

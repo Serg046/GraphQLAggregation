@@ -55,7 +55,7 @@ internal static class DbConnectionExtensions
     {
         if (context.Directives?.TryGetValue(AggregationDirective.NAME, out var directive) == true)
         {
-            if (directive.Arguments.Values.FirstOrDefault().Value is object[] groupBy)
+            if (directive.Arguments.TryGetValue(AggregationDirective.ARG_NAME, out var argument) && argument.Value is object[] groupBy)
             {
                 groups = groupBy.Select(g => g.ToString()!).ToArray();
                 return true;
@@ -70,9 +70,9 @@ internal static class DbConnectionExtensions
     {
         foreach (var field in subFields)
         {
-            if (field.Value.Field.Directives?.Find(MaxDirective.NAME) is GraphQLDirective directive)
+            if (TryGetAggrDirective(field.Value.Field, out var directive))
             {
-                if (directive.Arguments?.Find("by") is GraphQLArgument arg && arg.Value is GraphQLStringValue value)
+                if (directive.Arguments?.Find(AggrDirective.ARG_NAME) is GraphQLArgument arg && arg.Value is GraphQLStringValue value)
                 {
                     yield return $"{directive.Name}({value.Value}) as {value.Value}";
                 }
@@ -87,4 +87,81 @@ internal static class DbConnectionExtensions
             }
         }
     }
+
+    private static bool TryGetAggrDirective(GraphQLField field, [NotNullWhen(true)]out GraphQLDirective? directive)
+    {
+        var names = AggrDirective.Directives.Select(d => d.Name);
+        if (field.Directives != null && field.Directives.FirstOrDefault(d => names.Contains(d.Name.StringValue)) is GraphQLDirective d)
+        {
+            directive = d;
+            return true;
+        }
+
+        directive = null;
+        return false;
+    }
 }
+
+public class AggregationDirective : Directive
+{
+    public const string ARG_NAME = "by";
+    public const string NAME = "aggregation";
+
+    public AggregationDirective() : base(NAME, DirectiveLocation.Field)
+    {
+        Arguments = new QueryArguments(new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+        {
+            Name = ARG_NAME
+        });
+    }
+}
+
+public abstract class AggrDirective : Directive
+{
+    public const string ARG_NAME = "by";
+
+    protected AggrDirective(string name) : base(name, DirectiveLocation.Field)
+    {
+        Arguments = new QueryArguments(new QueryArgument<StringGraphType>
+        {
+            Name = ARG_NAME
+        });
+    }
+
+    public static AggrDirective[] Directives { get; } = new AggrDirective[]
+    { 
+        new AvgDirective(),
+        new MaxDirective(),
+        new MinDirective(),
+        new SumDirective()
+    };
+}
+
+public class AvgDirective : AggrDirective
+{
+    public AvgDirective() : base("avg")
+    {
+    }
+}
+
+public class MaxDirective : AggrDirective
+{
+    public MaxDirective() : base("max")
+    {
+    }
+}
+
+public class MinDirective : AggrDirective
+{
+    public MinDirective() : base("min")
+    {
+    }
+}
+
+public class SumDirective : AggrDirective
+{
+    public SumDirective() : base("sum")
+    {
+    }
+}
+

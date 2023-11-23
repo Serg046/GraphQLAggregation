@@ -21,6 +21,7 @@ public class UserType : ObjectGraphType<User>
         Field(x => x.FirstName);
         Field(x => x.LastName);
         Field(x => x.Age);
+        Field(x => x.Kids);
         Field<PassportType>("passport").ResolveAsync(async ctx =>
             await dbConnection.GetAsync<Passport>(ctx.Source.PassportId));
     }
@@ -33,6 +34,7 @@ public class UserType2 : ObjectGraphType<User>
         Field(x => x.FirstName);
         Field(x => x.LastName);
         Field(x => x.Age);
+        Field(x => x.Kids);
         Field<PassportType>("passport").Resolve(ctx =>
         {
             var loader = dataLoaderAccessor.Context!.GetOrAddBatchLoader<int, Passport>("GetPassportsById",
@@ -53,6 +55,7 @@ public class UserType3 : ObjectGraphType
         Field<StringGraphType>("FirstName");
         Field<StringGraphType>("LastName");
         Field<IntGraphType>("Age");
+        Field<IntGraphType>("Kids");
         Field<PassportType>("passport");
     }
 }

@@ -21,5 +21,7 @@ public class User
 
     public required int Age { get; init; }
 
+    public required int Kids { get; init; }
+
     public required int PassportId { get; init; }
 }

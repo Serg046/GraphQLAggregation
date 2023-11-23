@@ -34,7 +34,7 @@ static async Task PrepareDatabase(IDbConnection dbConnection)
 {
     var cmd = dbConnection.CreateCommand();
     cmd.CommandText = """
-        create table Users(Id int, FirstName nvarchar(100), LastName nvarchar(100), Age int, PassportId int);
+        create table Users(Id int, FirstName nvarchar(100), LastName nvarchar(100), Age int, Kids int, PassportId int);
         create table Passports(Id int, Number nvarchar(100));
         """;
     cmd.ExecuteNonQuery();
@@ -49,11 +49,11 @@ static async Task PrepareDatabase(IDbConnection dbConnection)
 
     await dbConnection.InsertAsync(new User[]
     {
-        new User { Id = 1, FirstName = "John", LastName = "Doe", Age = 35, PassportId = 1 },
-        new User { Id = 2, FirstName = "Paul", LastName = "Smith", Age = 37, PassportId = 2 },
-        new User { Id = 3, FirstName = "Paul", LastName = "Jones", Age = 39, PassportId = 3 },
-        new User { Id = 4, FirstName = "John", LastName = "Smith", Age = 41, PassportId = 4 },
-        new User { Id = 5, FirstName = "Paul", LastName = "Williams", Age = 43, PassportId = 5 }
+        new User { Id = 1, FirstName = "John", LastName = "Doe", Age = 35, Kids = 0, PassportId = 1 },
+        new User { Id = 2, FirstName = "Paul", LastName = "Smith", Age = 37,Kids = 2, PassportId = 2 },
+        new User { Id = 3, FirstName = "Paul", LastName = "Jones", Age = 39,Kids = 1, PassportId = 3 },
+        new User { Id = 4, FirstName = "John", LastName = "Smith", Age = 41,Kids = 3, PassportId = 4 },
+        new User { Id = 5, FirstName = "Paul", LastName = "Williams", Age = 43, Kids = 1, PassportId = 5 }
     });
 }
 
@@ -62,7 +62,8 @@ public class ApiSchema : Schema
     public ApiSchema(IServiceProvider services, Query query) : base(services)
     {
         Query = query;
-        Directives.Register(new AggregationDirective(), new MaxDirective());
+        Directives.Register(new AggregationDirective());
+        Directives.Register(AggrDirective.Directives);
     }
 }
 
