@@ -21,8 +21,8 @@ public class UserType : ObjectGraphType<User>
         Field(x => x.FirstName);
         Field(x => x.LastName);
         Field(x => x.Age);
-        Field<PassportType>("passport")
-            .ResolveAsync(async ctx => await dbConnection.GetAsync<Passport>(ctx.Source.PassportId));
+        Field<PassportType>("passport").ResolveAsync(async ctx =>
+            await dbConnection.GetAsync<Passport>(ctx.Source.PassportId));
     }
 }
 
