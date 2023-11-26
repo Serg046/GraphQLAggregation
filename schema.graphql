@@ -1,0 +1,44 @@
+directive @aggregation(by: [String]!) on FIELD
+
+directive @avg(by: String) on FIELD
+
+directive @max(by: String) on FIELD
+
+directive @min(by: String) on FIELD
+
+directive @sum(by: String) on FIELD
+
+type Query {
+    users: [UserType]
+    users2: [UserType2]
+    users3: [UserType3]
+}
+
+type UserType {
+    firstName: String!
+    lastName: String!
+    age: Int!
+    kids: Int!
+    passport: PassportType
+}
+
+type PassportType {
+    id: Int!
+    number: String!
+}
+
+type UserType2 {
+    firstName: String!
+    lastName: String!
+    age: Int!
+    kids: Int!
+    passport: PassportType
+}
+
+type UserType3 {
+    firstName: String
+    lastName: String
+    age: Int
+    kids: Int
+    passport: PassportType
+}
