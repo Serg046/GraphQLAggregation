@@ -2,6 +2,10 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Don't forget about `npm i` and also you would need to configure
+`.npmrc` with your PAT from assetmark Artifacts. Because it's using 
+widgets components lib from there.
+
 ## Available Scripts
 
 In the project directory, you can run:
