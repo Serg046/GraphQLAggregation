@@ -9,36 +9,18 @@ directive @min(by: String) on FIELD
 directive @sum(by: String) on FIELD
 
 type Query {
-    users: [UserType]
-    users2: [UserType2]
-    users3: [UserType3]
+  users: [UserType]
 }
 
 type UserType {
-    firstName: String!
-    lastName: String!
-    age: Int!
-    kids: Int!
-    passport: PassportType
+  firstName: String!
+  lastName: String!
+  age: Int!
+  kids: Int!
+  passport: PassportType
 }
 
 type PassportType {
-    id: Int!
-    number: String!
-}
-
-type UserType2 {
-    firstName: String!
-    lastName: String!
-    age: Int!
-    kids: Int!
-    passport: PassportType
-}
-
-type UserType3 {
-    firstName: String
-    lastName: String
-    age: Int
-    kids: Int
-    passport: PassportType
+  id: Int!
+  number: String!
 }

@@ -66,5 +66,3 @@ public class ApiSchema : Schema
         Directives.Register(AggrDirective.Directives);
     }
 }
-
-
